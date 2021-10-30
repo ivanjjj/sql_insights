@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="/Users/course/Documents/GitHub/sql_insights/chinook.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="3350"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="0" parent="0"/><expanded_item id="5" parent="0"/><expanded_item id="6" parent="0"/><expanded_item id="8" parent="0"/><expanded_item id="9" parent="0"/><expanded_item id="10" parent="0"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,5:mainAlbum"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="Album" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="51"/><column index="2" value="300"/><column index="3" value="48"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1">
+-- Question Set 1
+
+-- Question 1
+-- SELECT BillingCountry, COUNT(*) AS total_invoices
+-- FROM Invoice
+-- GROUP BY BillingCountry
+-- ORDER BY total_invoices DESC
+
+-- Question 2
+-- SELECT BillingCity, SUM(Total) AS sum_total
+-- FROM Invoice
+-- GROUP BY BillingCity
+-- ORDER BY sum_total DESC
+-- LIMIT 1
+
+-- Question 3
+-- SELECT Customer.FirstName || ' ' || Customer.LastName AS full_name, Customer.CustomerId, SUM(Invoice.Total) AS sum_total
+-- FROM Invoice
+-- JOIN Customer
+-- ON Invoice.CustomerId = Customer.CustomerId
+-- GROUP BY full_name
+-- ORDER BY sum_total DESC
+-- LIMIT 1
+
+-- Question Set 2
+
+-- Question 1
+-- SELECT DISTINCT Customer.Email, Customer.FirstName, Customer.LastName, Genre.Name AS Name
+-- FROM Customer
+-- JOIN Invoice
+-- ON Invoice.CustomerId = Customer.CustomerId
+-- JOIN InvoiceLine
+-- ON Invoice.InvoiceId = InvoiceLine.InvoiceId
+-- JOIN Track
+-- ON InvoiceLine.TrackId = Track.TrackId
+-- JOIN Genre
+-- ON Track.GenreId = Genre.GenreId
+-- WHERE Track.GenreId = 1
+
+-- Question 2
+-- SELECT Artist.ArtistId, Artist.Name, COUNT(*) AS total_songs
+-- FROM Artist
+-- JOIN Album
+-- ON Artist.ArtistId = Album.ArtistId
+-- JOIN Track
+-- ON Album.AlbumId = Track.AlbumId
+-- JOIN Genre
+-- ON Track.GenreId = Genre.GenreId
+-- WHERE Genre.GenreId = 1
+-- GROUP BY Artist.ArtistId
+-- ORDER BY total_songs DESC
+-- LIMIT 10
+
+-- Question 3a
+-- SELECT Artist.ArtistId, Artist.Name, SUM(InvoiceLine.Quantity * InvoiceLine.UnitPrice) AS amount_spent
+-- FROM Artist
+-- JOIN Album
+-- ON Artist.ArtistId = Album.ArtistId
+-- JOIN Track
+-- ON Album.AlbumId = Track.AlbumId
+-- JOIN InvoiceLine
+-- ON InvoiceLine.TrackId = Track.TrackId
+-- JOIN Invoice
+-- ON InvoiceLine.InvoiceId = Invoice.InvoiceId
+-- GROUP BY Artist.ArtistId
+-- ORDER BY amount_spent DESC
+-- LIMIT 10
+
+-- Question 3b
+-- SELECT Artist.ArtistId,
+-- Artist.Name, SUM(InvoiceLine.Quantity * InvoiceLine.UnitPrice) AS amount_spent,
+-- Customer.CustomerId,
+-- Customer.FirstName,
+-- Customer.LastName
+-- FROM Artist
+-- JOIN Album
+-- ON Artist.ArtistId = Album.ArtistId
+-- JOIN Track
+-- ON Album.AlbumId = Track.AlbumId
+-- JOIN InvoiceLine
+-- ON InvoiceLine.TrackId = Track.TrackId
+-- JOIN Invoice
+-- ON InvoiceLine.InvoiceId = Invoice.InvoiceId
+-- JOIN Customer
+-- ON Customer.CustomerId = Invoice.CustomerId
+-- WHERE Artist.ArtistId = 90
+-- GROUP BY Artist.ArtistId, Customer.CustomerId
+-- ORDER BY amount_spent DESC
+-- LIMIT 10
+
+-- Question Set 3
+
+-- Question 1
+
+-- WITH table_1 AS (SELECT COUNT(*) as total_purchases, Customer.Country, Genre.Name, Genre.GenreId
+-- FROM Invoice
+-- JOIN InvoiceLine
+-- ON Invoice.InvoiceId = InvoiceLine.InvoiceId
+-- JOIN Customer
+-- ON Customer.CustomerId = Invoice.CustomerId
+-- JOIN Track
+-- ON InvoiceLine.TrackId = Track.TrackId
+-- JOIN Genre
+-- ON Track.GenreId = Genre.GenreId
+-- GROUP BY Customer.Country, Genre.GenreId),
+-- 
+-- table_2 AS (SELECT Country, MAX(total_purchases) Purchases
+-- 
+-- FROM table_1
+-- GROUP BY 1)
+-- 
+-- SELECT table_2.Purchases, table_1.Country, table_1.Name, table_1.GenreId
+-- FROM table_1
+-- JOIN table_2
+-- ON table_1.Country = table_2.Country
+-- WHERE Purchases = table_1.total_purchases
+-- GROUP BY 1, 2, 3
+-- ORDER BY 1
+
+-- Question 2
+
+-- SELECT Name, Milliseconds
+-- FROM Track
+-- WHERE Milliseconds &gt; (SELECT AVG(Milliseconds) FROM Track)
+-- ORDER BY Milliseconds DESC
+
+-- Question 3
+
+-- WITH table_1 AS (
+-- 
+-- SELECT Customer.Country, SUM(Invoice.Total) as total_spent, Customer.FirstName, Customer.LastName, Customer.CustomerId
+-- FROM Invoice
+-- JOIN Customer
+-- ON Customer.CustomerId = Invoice.CustomerId
+-- GROUP BY Customer.CustomerId, Customer.Country
+-- 
+-- ),
+-- 
+-- table_2 AS (SELECT Country, MAX(total_spent) TotalSpent
+-- 
+-- FROM table_1
+-- GROUP BY 1)
+-- 
+-- SELECT table_1.Country, table_2.TotalSpent, table_1.FirstName, table_1.LastName, table_1.CustomerId
+-- FROM table_1
+-- JOIN table_2
+-- ON table_1.Country = table_2.Country
+-- WHERE TotalSpent = table_1.total_spent
+-- GROUP BY 1, 2, 5
+-- ORDER BY 1</sql><sql name="SQL 3">/* Query 1 - query used for first insight */
+
+WITH t1 AS
+(
+SELECT Track.Name AS TrackName, Artist.Name AS ArtistName, track.TrackId, Artist.ArtistId,
+	CASE
+		WHEN LOWER(SUBSTR(Track.Name,1,3)) = 'the' THEN 'Yes'
+		ELSE 'No'
+	END AS starts_with_the
+FROM Track
+JOIN Album
+ON Album.AlbumId = Track.AlbumId
+JOIN Artist
+ON Artist.ArtistId = Album.ArtistId
+)
+
+SELECT ArtistName, COUNT(*) AS TheTracks
+FROM t1
+GROUP BY ArtistName
+ORDER BY TheTracks DESC
+LIMIT 20
+
+/* Query 2 - query used for first insight */
+
+SELECT Artist.Name, Artist.ArtistId, ROUND(SUM(InvoiceLine.Quantity * InvoiceLine.UnitPrice), 2) AS AmountSpent
+FROM Artist
+JOIN Album
+ON Artist.ArtistId = Album.ArtistId
+JOIN Track
+ON Album.AlbumId = Track.AlbumId
+JOIN InvoiceLine
+ON InvoiceLine.TrackId = Track.TrackId
+JOIN Invoice
+ON InvoiceLine.InvoiceId = Invoice.InvoiceId
+GROUP BY Artist.ArtistId
+ORDER BY AmountSpent DESC
+LIMIT 10
+
+/* Query 3 - query used for first insight */
+
+SELECT Name, Milliseconds
+FROM Track
+ORDER BY Milliseconds
+LIMIT 10
+
+/* Query 4 - query used for first insight */
+WITH t1 AS
+(
+SELECT Artist.Name, Artist.ArtistId, SUM(InvoiceLine.Quantity * InvoiceLine.UnitPrice) AS AmountSpent, (SUM(Track.Milliseconds)/1000)/60 AS Minutes
+FROM Artist
+JOIN Album
+ON Artist.ArtistId = Album.ArtistId
+JOIN Track
+ON Album.AlbumId = Track.AlbumId
+JOIN InvoiceLine
+ON InvoiceLine.TrackId = Track.TrackId
+JOIN Invoice
+ON InvoiceLine.InvoiceId = Invoice.InvoiceId
+GROUP BY Artist.ArtistId
+ORDER BY AmountSpent DESC
+)
+
+SELECT Name, ArtistId, ROUND(AmountSpent, 2) AS AmountSpent, Minutes, ROUND(AmountSpent/Minutes,2) AS SpentPerMinute
+FROM t1
+WHERE Minutes &gt; 200
+ORDER BY SpentPerMinute DESC
+LIMIT 10</sql><current_tab id="1"/></tab_sql></sqlb_project>

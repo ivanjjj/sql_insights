@@ -1,0 +1,70 @@
+/* Query 1 - query used for first insight */
+
+WITH t1 AS
+(
+SELECT Track.Name AS TrackName, Artist.Name AS ArtistName, track.TrackId, Artist.ArtistId,
+	CASE
+		WHEN LOWER(SUBSTR(Track.Name,1,3)) = 'the' THEN 'Yes'
+		ELSE 'No'
+	END AS starts_with_the
+FROM Track
+JOIN Album
+ON Album.AlbumId = Track.AlbumId
+JOIN Artist
+ON Artist.ArtistId = Album.ArtistId
+)
+
+SELECT ArtistName, COUNT(*) AS TheTracks
+FROM t1
+GROUP BY ArtistName
+ORDER BY TheTracks DESC
+LIMIT 20
+
+/* Query 2 - query used for first insight */
+
+SELECT Artist.Name, Artist.ArtistId, ROUND(SUM(InvoiceLine.Quantity * InvoiceLine.UnitPrice), 2) AS AmountSpent
+FROM Artist
+JOIN Album
+ON Artist.ArtistId = Album.ArtistId
+JOIN Track
+ON Album.AlbumId = Track.AlbumId
+JOIN InvoiceLine
+ON InvoiceLine.TrackId = Track.TrackId
+JOIN Invoice
+ON InvoiceLine.InvoiceId = Invoice.InvoiceId
+GROUP BY Artist.ArtistId
+ORDER BY AmountSpent DESC
+LIMIT 10
+
+/* Query 3 - query used for first insight */
+
+SELECT Album.AlbumId, Album.Title, SUM(Track.Milliseconds)/1000 AS TotalSeconds
+FROM Track
+JOIN Album
+ON Track.AlbumId = Album.AlbumId
+GROUP BY Album.AlbumId
+ORDER BY TotalSeconds
+LIMIT 10
+
+/* Query 4 - query used for first insight */
+WITH t1 AS
+(
+SELECT Artist.Name, Artist.ArtistId, SUM(InvoiceLine.Quantity * InvoiceLine.UnitPrice) AS AmountSpent, (SUM(Track.Milliseconds)/1000)/60 AS Minutes
+FROM Artist
+JOIN Album
+ON Artist.ArtistId = Album.ArtistId
+JOIN Track
+ON Album.AlbumId = Track.AlbumId
+JOIN InvoiceLine
+ON InvoiceLine.TrackId = Track.TrackId
+JOIN Invoice
+ON InvoiceLine.InvoiceId = Invoice.InvoiceId
+GROUP BY Artist.ArtistId
+ORDER BY AmountSpent DESC
+)
+
+SELECT Name, ArtistId, ROUND(AmountSpent, 2) AS AmountSpent, Minutes, ROUND(AmountSpent/Minutes,2) AS SpentPerMinute
+FROM t1
+WHERE Minutes > 200
+ORDER BY SpentPerMinute DESC
+LIMIT 10
